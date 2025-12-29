@@ -10,9 +10,24 @@ import { cn } from '@/lib/utils';
 export default function TaskView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getTask } = useTasks();
+  const { getTask, loading } = useTasks();
   
   const task = getTask(id || '');
+
+  if (loading) {
+    return (
+      <PageLayout>
+        <div className="max-w-3xl mx-auto">
+          <div className="card-elevated p-8 animate-pulse">
+            <div className="h-6 bg-muted rounded w-1/4 mb-4" />
+            <div className="h-8 bg-muted rounded w-3/4 mb-6" />
+            <div className="h-4 bg-muted rounded w-full mb-2" />
+            <div className="h-4 bg-muted rounded w-2/3" />
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
 
   if (!task) {
     return (
