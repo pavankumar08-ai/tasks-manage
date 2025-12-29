@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Task, TaskFormData, Priority, Status } from '@/types/task';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 interface TaskContextType {
   tasks: Task[];
@@ -36,6 +37,7 @@ const mapDbRowToTask = (row: {
 });
 
 export function TaskProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,6 +60,12 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    if (!user) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
+
     fetchTasks();
 
     // Subscribe to real-time changes
@@ -113,9 +121,14 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user]);
 
   const addTask = async (data: TaskFormData) => {
+    if (!user) {
+      toast.error('You must be logged in to create tasks');
+      return;
+    }
+    
     try {
       const { data: newTask, error } = await supabase
         .from('tasks')
@@ -125,6 +138,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           priority: data.priority,
           status: data.status,
           due_date: data.dueDate || null,
+          user_id: user.id,
         })
         .select()
         .single();
