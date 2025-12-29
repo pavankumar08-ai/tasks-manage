@@ -15,7 +15,7 @@ import { Search, Filter, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function TaskList() {
-  const { tasks } = useTasks();
+  const { tasks, loading } = useTasks();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
@@ -88,7 +88,17 @@ export default function TaskList() {
         </div>
 
         {/* Task Grid */}
-        {filteredTasks.length > 0 ? (
+        {loading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="card-elevated p-6 animate-pulse">
+                <div className="h-4 bg-muted rounded w-3/4 mb-4" />
+                <div className="h-3 bg-muted rounded w-full mb-2" />
+                <div className="h-3 bg-muted rounded w-2/3" />
+              </div>
+            ))}
+          </div>
+        ) : filteredTasks.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredTasks.map((task, index) => (
               <TaskCard key={task.id} task={task} index={index} />
