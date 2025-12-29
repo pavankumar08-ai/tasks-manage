@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+const basename = import.meta.env.MODE === "production" ? "/tasks-manage" : "";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TaskProvider } from "@/context/TaskContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -19,7 +21,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <AuthProvider>
         <TaskProvider>
           <TooltipProvider>
