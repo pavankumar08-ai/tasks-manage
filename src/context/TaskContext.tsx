@@ -59,6 +59,60 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchTasks();
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel('tasks-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'tasks',
+        },
+        (payload) => {
+          console.log('Task inserted:', payload);
+          const newTask = mapDbRowToTask(payload.new as any);
+          setTasks((prev) => {
+            // Avoid duplicates if we already added it optimistically
+            if (prev.some((t) => t.id === newTask.id)) return prev;
+            return [newTask, ...prev];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'tasks',
+        },
+        (payload) => {
+          console.log('Task updated:', payload);
+          const updatedTask = mapDbRowToTask(payload.new as any);
+          setTasks((prev) =>
+            prev.map((task) => (task.id === updatedTask.id ? updatedTask : task))
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'tasks',
+        },
+        (payload) => {
+          console.log('Task deleted:', payload);
+          const deletedId = (payload.old as any).id;
+          setTasks((prev) => prev.filter((task) => task.id !== deletedId));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const addTask = async (data: TaskFormData) => {
